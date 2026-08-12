@@ -21,25 +21,27 @@
 
 ## 每日流程
 
-1. 到 ChatGPT `.NET系統學習` Project 開新 Chat，輸入「今天的題目」。
-2. 閱讀今日教學與題目；新語法第一次出現時會先介紹與示範。
-3. 在 VS Code 自己實作並使用 `dotnet run` 驗證結果。
-4. 卡住時依序取得 `Hint 1` → `Hint 2` → 完整答案。
-5. 完成後將程式碼交給 ChatGPT Code Review，依 Review 修正。
-6. 確認完成後 commit + push 到 GitHub。
+1. **拿題目、建立環境**：<br>
+  (1) 到 ChatGPT `.NET系統學習` Project 開新 Chat，輸入「今天的題目」。<br>
+  (2) 在 VSCode 打 `$daily`  產生專案環境<br>
+  (3) 把 (1) 的題目貼到 (2) 生成後的檔案<br>
+3. **學習新知**：閱讀今日教學與題目；新語法第一次出現時會先介紹與示範。
+4. **實作**：在 VS Code 自己實作並使用 `dotnet run` 驗證結果。
+5. **困難處理**：卡住時依序取得 `提示 1` → `提示 2` → 完整答案。<br>
+   ※ 請務必在 `.NET系統學習` Project 進行，才能讓 ChatGPT 取得記憶更新 
+6. **ChatGPT 驗收**：完成後將程式碼交給 ChatGPT Code Review，依 Review 修正。
+7. **收工**：確認完成後 commit + push 到 GitHub。
 
 ```text
-1. 到 Chatgpt projects(.NET系統學習) 輸入:"今天的題目"
-2. 開啟 vscode, 打 $daily 產生專案環境
-3. 把 1 的題目貼到 2 生成後的檔案
-    ↓
-學習新知
-    ↓
-Coding + dotnet run
-    ↓
-給 chatgpt 做 Code Review
-    ↓
-完成修正、收尾
-    ↓
-Commit + Push 到 Github Repo
+         取得題目、建環境
+                ↓
+             學習新知
+                ↓
+              實作
+                ↓
+        Chatgpt 做 Code Review
+                ↓
+          完成修正、收尾
+                ↓
+         更新 Github Repo
 ```
