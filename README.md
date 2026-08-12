@@ -29,15 +29,17 @@
 6. 確認完成後 commit + push 到 GitHub。
 
 ```text
-今天的題目
+1. 到 Chatgpt projects(.NET系統學習) 輸入:"今天的題目"
+2. 開啟 vscode, 打 $daily 產生專案環境
+3. 把 1 的題目貼到 2 生成後的檔案
     ↓
 學習新知
     ↓
 Coding + dotnet run
     ↓
-Code Review
+給 chatgpt 做 Code Review
     ↓
-修正完成
+完成修正、收尾
     ↓
-Commit + Push
+Commit + Push 到 Github Repo
 ```
