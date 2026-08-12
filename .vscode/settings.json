@@ -1,0 +1,27 @@
+{
+  // ==================== Markdown 預覽 ====================
+  // ※ 讓 SDD 文件預設以預覽模式開啟，並統一預覽中的操作方式 ※
+
+  // 開啟 .md 檔時，預設使用 Markdown 預覽而不是純文字編輯器
+  "workbench.editorAssociations": {
+    "*.md": "vscode.markdown.preview.editor"
+  },
+
+  // 在 Markdown 預覽中按兩下，於同一頁籤切換回文字編輯模式
+  "markdown.preview.doubleClickToSwitchToEditor": true,
+
+  // 點擊預覽中的 Markdown 連結時，在目前 VS Code 視窗內開啟
+  "markdown.preview.openMarkdownLinks": "inEditor",
+
+  // 預覽 Markdown 時隱藏檔案開頭的 front matter 區塊
+  "markdown.preview.frontMatter": "hide",
+
+  // ==================== 編輯器閱讀體驗 ====================
+  // ※ 控制一般文字與程式碼的自動換行，避免長行超出閱讀範圍 ※
+
+  // 將自動換行的參考欄寬設為 160 個字元。
+  "editor.wordWrapColumn": 160,
+
+  // 依 editor.wordWrapColumn 的欄寬進行自動換
+  "editor.wordWrap": "wordWrapColumn",
+}
