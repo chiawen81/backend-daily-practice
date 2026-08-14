@@ -38,6 +38,43 @@ if ($repositoryName -ne 'backend-daily-practice') {
     throw "Expected the backend-daily-practice repository root, but received: $repositoryPath"
 }
 
+$projectPath = Join-Path $repositoryPath 'backend-daily-practice.csproj'
+if (-not (Test-Path -LiteralPath $projectPath -PathType Leaf)) {
+    throw "Shared project does not exist: $projectPath"
+}
+
+$projectItem = Get-Item -LiteralPath $projectPath -Force
+if (($projectItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+    throw "Shared project cannot be a reparse point: $projectPath"
+}
+
+$actualProjectPath = Get-NormalizedPath -Path $projectItem.FullName
+$projectParent = [IO.Directory]::GetParent($actualProjectPath)
+if (
+    -not (Test-SamePath -Left $actualProjectPath -Right $projectPath) -or
+    $null -eq $projectParent -or
+    -not (Test-SamePath -Left $projectParent.FullName -Right $repositoryPath)
+) {
+    throw "Shared project must be a direct child of the repository root: $actualProjectPath"
+}
+
+try {
+    [xml]$projectXml = Get-Content -LiteralPath $actualProjectPath -Raw
+}
+catch {
+    throw "Shared project is not valid XML: $actualProjectPath. $($_.Exception.Message)"
+}
+
+$defaultCompileNodes = @($projectXml.SelectNodes('/Project/PropertyGroup/EnableDefaultCompileItems'))
+if ($defaultCompileNodes.Count -ne 1 -or $defaultCompileNodes[0].InnerText -cne 'false') {
+    throw 'Shared project must contain exactly one EnableDefaultCompileItems element set to false.'
+}
+
+$compileNodes = @($projectXml.SelectNodes('/Project/ItemGroup/Compile'))
+if ($compileNodes.Count -ne 1) {
+    throw 'Shared project must contain exactly one Compile item.'
+}
+
 $dailyDirectories = @(
     Get-ChildItem -LiteralPath $repositoryPath -Directory -Force | ForEach-Object {
         if ($_.Name -match '^day(?<Number>[0-9]{2,})$') {
@@ -71,6 +108,27 @@ if ($dailyDirectories.Count -gt 0) {
         throw "Cannot increment Daily number beyond $([long]::MaxValue)."
     }
 
+    if (($latestDaily.Directory.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw "The latest Daily directory cannot be a reparse point: $($latestDaily.Directory.FullName)"
+    }
+
+    $latestPath = Get-NormalizedPath -Path $latestDaily.Directory.FullName
+    $latestParent = [IO.Directory]::GetParent($latestPath)
+    if ($null -eq $latestParent -or -not (Test-SamePath -Left $latestParent.FullName -Right $repositoryPath)) {
+        throw "The latest Daily is not a direct child of the repository root: $latestPath"
+    }
+
+    $latestProgramPath = Join-Path $latestPath 'Program.cs'
+    if (-not (Test-Path -LiteralPath $latestProgramPath -PathType Leaf)) {
+        throw "The latest Daily does not contain Program.cs: $latestProgramPath"
+    }
+
+    $expectedCompileInclude = "$($latestDaily.Name)\Program.cs"
+    $actualCompileInclude = $compileNodes[0].GetAttribute('Include')
+    if (-not [string]::Equals($actualCompileInclude, $expectedCompileInclude, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Shared project selects '$actualCompileInclude', but the latest Daily requires '$expectedCompileInclude'."
+    }
+
     $nextNumber = $latestDaily.Number + 1
 }
 
@@ -85,74 +143,31 @@ if (Test-Path -LiteralPath $nextPath) {
     throw "The next Daily path already exists; refusing to overwrite it: $nextPath"
 }
 
-$cleanupTargets = @()
-if ($null -ne $latestDaily) {
-    if (($latestDaily.Directory.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-        throw "The latest Daily directory cannot be a reparse point: $($latestDaily.Directory.FullName)"
-    }
+$programPath = Join-Path $nextPath 'Program.cs'
+$notePath = Join-Path $nextPath 'doc.md'
+$utf8WithoutBom = [Text.UTF8Encoding]::new($false)
 
-    $latestPath = Get-NormalizedPath -Path $latestDaily.Directory.FullName
-    $latestParent = [IO.Directory]::GetParent($latestPath)
-    if ($null -eq $latestParent -or -not (Test-SamePath -Left $latestParent.FullName -Right $repositoryPath)) {
-        throw "The latest Daily is not a direct child of the repository root: $latestPath"
-    }
+Write-Host "Creating $nextName in the shared Console project..."
+[void][IO.Directory]::CreateDirectory($nextPath)
+[IO.File]::WriteAllText(
+    $programPath,
+    'Console.WriteLine("Hello, World!");' + [Environment]::NewLine,
+    $utf8WithoutBom
+)
+[IO.File]::WriteAllText($notePath, '', $utf8WithoutBom)
 
-    foreach ($artifactName in @('bin', 'obj')) {
-        $candidatePath = Join-Path $latestPath $artifactName
-        if (-not (Test-Path -LiteralPath $candidatePath)) {
-            continue
-        }
-
-        $candidate = Get-Item -LiteralPath $candidatePath -Force
-        if (-not $candidate.PSIsContainer) {
-            throw "Cleanup target is not a directory: $candidatePath"
-        }
-
-        if (($candidate.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-            throw "Cleanup target cannot be a reparse point: $candidatePath"
-        }
-
-        $actualPath = Get-NormalizedPath -Path $candidate.FullName
-        $expectedPath = Get-NormalizedPath -Path $candidatePath
-        $actualParent = [IO.Directory]::GetParent($actualPath)
-        if (
-            -not (Test-SamePath -Left $actualPath -Right $expectedPath) -or
-            $null -eq $actualParent -or
-            -not (Test-SamePath -Left $actualParent.FullName -Right $latestPath) -or
-            (Split-Path -Leaf $actualPath) -notin @('bin', 'obj')
-        ) {
-            throw "Cleanup target does not match the expected dayXX/bin or dayXX/obj structure: $actualPath"
-        }
-
-        $cleanupTargets += $actualPath
-    }
-}
-
-foreach ($cleanupTarget in $cleanupTargets) {
-    Remove-Item -LiteralPath $cleanupTarget -Recurse -Force
-    Write-Host "Removed build artifacts: $cleanupTarget"
-}
+$nextCompileInclude = "$nextName\Program.cs"
+$compileNodes[0].SetAttribute('Include', $nextCompileInclude)
+$projectXml.Save($actualProjectPath)
 
 $dotnet = Get-Command dotnet -CommandType Application -ErrorAction Stop
-Write-Host "Creating $nextName with the installed .NET SDK..."
-& $dotnet.Source new console --name $nextName --output $nextPath
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet new failed for $nextName with exit code $LASTEXITCODE."
-}
-
-$projectPath = Join-Path $nextPath "$nextName.csproj"
-$programPath = Join-Path $nextPath 'Program.cs'
-if (-not (Test-Path -LiteralPath $projectPath -PathType Leaf)) {
-    throw "dotnet new did not create the expected project file: $projectPath"
-}
-if (-not (Test-Path -LiteralPath $programPath -PathType Leaf)) {
-    throw "dotnet new did not create the expected Program.cs: $programPath"
-}
-
-Write-Host "Validating $nextName with dotnet run..."
-& $dotnet.Source run --project $nextPath
+Write-Host "Validating $nextName with the shared project..."
+& $dotnet.Source run --project $actualProjectPath
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet run failed for $nextName with exit code $LASTEXITCODE."
 }
 
+Write-Host "Created source: $programPath"
+Write-Host "Created notes: $notePath"
+Write-Host "Shared project source: $nextCompileInclude"
 Write-Host "Daily exercise environment created successfully: $nextPath"
