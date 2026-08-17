@@ -5,10 +5,12 @@ description: Use when initializing the next Daily source and note files in the s
 
 # Daily Exercise Initialization
 
+The scripts are shared with the Codex-side skill and live in `.agents/skills/daily/scripts/`. Never duplicate or reimplement them here.
+
 Initialize only the next coding environment. Do not generate an exercise, syllabus, learning progress, solution, per-Day project, commit, or push.
 
 1. Resolve the Git repository root and confirm it is `backend-daily-practice`.
-2. Run the bundled script from the repository root:
+2. Run the shared script from the repository root:
 
 ```powershell
 $repoRoot = (git rev-parse --show-toplevel).Trim()

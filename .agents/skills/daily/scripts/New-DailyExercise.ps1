@@ -167,6 +167,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet run failed for $nextName with exit code $LASTEXITCODE."
 }
 
+$updateIndexPath = Join-Path $PSScriptRoot 'Update-DailyIndex.ps1'
+if (Test-Path -LiteralPath $updateIndexPath -PathType Leaf) {
+    # 今天的 Program.cs / doc.md 都還是樣板，沒有主題可抓；等隔天建環境時才會收進目錄
+    & $updateIndexPath -RepositoryRoot $repositoryPath -ExcludeDaily $nextName
+}
+
 Write-Host "Created source: $programPath"
 Write-Host "Created notes: $notePath"
 Write-Host "Shared project source: $nextCompileInclude"
