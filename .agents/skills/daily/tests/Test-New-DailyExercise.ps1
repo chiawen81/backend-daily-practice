@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 Set-StrictMode -Version Latest
@@ -126,6 +126,16 @@ try {
     }
 
     Assert-Match -Pattern 'Hello, World!' -Actual ($output -join [Environment]::NewLine) -Message 'new Daily runs successfully'
+
+    # 迴歸測試：建立環境時必須連帶刷新 INDEX.md（排除當天新建的 Daily）
+    $indexPath = Join-Path $repositoryRoot 'INDEX.md'
+    Assert-True -Condition (Test-Path -LiteralPath $indexPath -PathType Leaf) -Message 'INDEX.md is refreshed by the creation script'
+    if (Test-Path -LiteralPath $indexPath -PathType Leaf) {
+        $indexText = [IO.File]::ReadAllText($indexPath)
+        Assert-Match -Pattern '\[01\]\(day01/\)' -Actual $indexText -Message 'INDEX.md lists day01'
+        Assert-Match -Pattern '\[02\]\(day02/\)' -Actual $indexText -Message 'INDEX.md lists day02'
+        Assert-False -Condition ($indexText -match '\[03\]\(day03/\)') -Message 'INDEX.md omits the newly created day03'
+    }
 
     if ($failures.Count -gt 0) {
         throw "Daily workflow test failed with $($failures.Count) assertion(s)."
