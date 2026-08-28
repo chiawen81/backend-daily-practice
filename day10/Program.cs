@@ -20,7 +20,7 @@ var products = new List<Product>() {
 };
 
 var selectProduct = products.FirstOrDefault(item => item.Id == 102);
-Console.WriteLine($"Product:{selectProduct?.Name},Price:{selectProduct?.Id}");
+Console.WriteLine($"Product:{selectProduct?.Name},Price:{selectProduct?.Price}");
 
 
 class Product
