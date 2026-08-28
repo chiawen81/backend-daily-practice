@@ -7,6 +7,6 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="day10\Program.cs" />
+    <Compile Include="day11\Program.cs" />
   </ItemGroup>
 </Project>

@@ -15,7 +15,8 @@
 | [07](day07/) | 2026-08-19 | LINQ-Where()+Any() | [Program.cs](day07/Program.cs) | [講義](day07/講義_LINQ-Where%28%29+Any%28%29.md) |
 | [08](day08/) | 2026-08-24 | LINQ-Contains() | [Program.cs](day08/Program.cs) | [講義](day08/講義_LINQ-Contains%28%29.md) |
 | [09](day09/) | 2026-08-26 | LINQ-Select() | [Program.cs](day09/Program.cs) | [講義](day09/講義_LINQ-Select%28%29.md) |
+| [10](day10/) | 2026-08-27 | LINQ-FirstOrDefault() | [Program.cs](day10/Program.cs) | [講義](day10/講義_LINQ-FirstOrDefault%28%29.md) |
 
-共 9 個 Daily。此表由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。
+共 10 個 Daily。此表由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。
 
 <!-- DAILY-INDEX:END -->
