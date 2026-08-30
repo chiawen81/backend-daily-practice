@@ -3,7 +3,9 @@ param(
     [string]$RepositoryRoot = (Get-Location).Path,
     [string]$IndexFileName = 'INDEX.md',
     # 剛建立、內容還是樣板的 Daily；排除後才不會在目錄留下一列空白佔位
-    [string]$ExcludeDaily
+    [string]$ExcludeDaily,
+    # Sprint 分區設定；相對路徑以 repository root 為基準，檔案不存在時退回單一表格
+    [string]$SprintFile = '.agents/skills/daily/config/sprints.json'
 )
 
 Set-StrictMode -Version Latest
@@ -130,6 +132,97 @@ function Get-LastCommitDate {
     return $date.Trim()
 }
 
+function Get-OptionalText {
+    param(
+        [Parameter(Mandatory)][psobject]$Source,
+        [Parameter(Mandatory)][string]$Name
+    )
+
+    # StrictMode 下不能直接存取不存在的屬性，選填欄位一律走這裡
+    if ($Source.PSObject.Properties.Name -notcontains $Name) {
+        return $null
+    }
+
+    $value = $Source.$Name
+    if ($null -eq $value -or [string]::IsNullOrWhiteSpace([string]$value)) {
+        return $null
+    }
+
+    return ([string]$value).Trim()
+}
+
+function Get-SprintDefinition {
+    param([Parameter(Mandatory)][AllowEmptyString()][string]$Path)
+
+    # 沒有設定檔就維持舊行為（單一表格），讓腳本在任何 repository 都能獨立運作
+    if ([string]::IsNullOrWhiteSpace($Path) -or -not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return @()
+    }
+
+    $raw = [IO.File]::ReadAllText($Path)
+    if ([string]::IsNullOrWhiteSpace($raw)) {
+        return @()
+    }
+
+    try {
+        # 5.1 的 ConvertFrom-Json 會把整個陣列當成單一物件輸出，先落地再展開
+        $parsed = ConvertFrom-Json -InputObject $raw
+    }
+    catch {
+        throw "Sprint metadata is not valid JSON: $Path"
+    }
+
+    $sprints = @(@($parsed) | ForEach-Object {
+        $name = Get-OptionalText -Source $_ -Name 'name'
+        if ($null -eq $name) {
+            throw "Every sprint in $Path needs a non-empty 'name'."
+        }
+
+        if ($_.PSObject.Properties.Name -notcontains 'startDay') {
+            throw "Sprint '$name' in $Path needs a 'startDay'."
+        }
+
+        $startDay = [long]0
+        if (-not [long]::TryParse([string]$_.startDay, [ref]$startDay) -or $startDay -lt 1) {
+            throw "Sprint '$name' in $Path has an invalid 'startDay': $($_.startDay)"
+        }
+
+        [PSCustomObject]@{
+            Name = $name
+            Status = Get-OptionalText -Source $_ -Name 'status'
+            StartDay = $startDay
+            CompletedOn = Get-OptionalText -Source $_ -Name 'completedOn'
+            Summary = Get-OptionalText -Source $_ -Name 'summary'
+            Note = Get-OptionalText -Source $_ -Name 'note'
+        }
+    } | Sort-Object -Property StartDay)
+
+    $duplicated = @(
+        $sprints | Group-Object -Property StartDay | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name }
+    )
+    if ($duplicated.Count -gt 0) {
+        throw "Sprint metadata has duplicate startDay values ($($duplicated -join ', ')): $Path"
+    }
+
+    return $sprints
+}
+
+function New-DailyTable {
+    param([AllowEmptyCollection()][string[]]$Rows)
+
+    $table = New-Object System.Collections.Generic.List[string]
+    $table.Add('| Day | 完成日 | 主題 | 程式碼 | 筆記 |')
+    $table.Add('|:---:|:------:|------|:------:|------|')
+    if ($null -ne $Rows -and $Rows.Count -gt 0) {
+        $table.AddRange($Rows)
+    }
+    else {
+        $table.Add('| — | — | _尚無 Daily_ | — | — |')
+    }
+
+    return $table.ToArray()
+}
+
 if (-not (Test-Path -LiteralPath $RepositoryRoot -PathType Container)) {
     throw "Repository root is not a directory: $RepositoryRoot"
 }
@@ -167,7 +260,7 @@ if (-not [string]::IsNullOrWhiteSpace($ExcludeDaily)) {
     }
 }
 
-$rows = New-Object System.Collections.Generic.List[string]
+$entries = New-Object System.Collections.Generic.List[psobject]
 $pending = New-Object System.Collections.Generic.List[string]
 
 foreach ($daily in $dailies) {
@@ -205,25 +298,103 @@ foreach ($daily in $dailies) {
     $dateCell = if ($null -ne $date) { $date } else { '—' }
 
     $dayLabel = '{0:D2}' -f $daily.Number
-    $rows.Add("| [$dayLabel]($(ConvertTo-MarkdownPath $daily.Name)/) | $dateCell | $topicCell | $programCell | $noteCell |")
+    $entries.Add([PSCustomObject]@{
+        Number = $daily.Number
+        Row = "| [$dayLabel]($(ConvertTo-MarkdownPath $daily.Name)/) | $dateCell | $topicCell | $programCell | $noteCell |"
+    })
 }
 
-$table = New-Object System.Collections.Generic.List[string]
-$table.Add('| Day | 完成日 | 主題 | 程式碼 | 筆記 |')
-$table.Add('|:---:|:------:|------|:------:|------|')
-if ($rows.Count -gt 0) {
-    $table.AddRange($rows)
+$sprintPath = ''
+if (-not [string]::IsNullOrWhiteSpace($SprintFile)) {
+    $sprintPath = if ([IO.Path]::IsPathRooted($SprintFile)) {
+        $SprintFile
+    }
+    else {
+        Join-Path $repositoryPath $SprintFile
+    }
 }
-else {
-    $table.Add('| — | — | _尚無 Daily_ | — | — |')
-}
+
+$sprints = @(Get-SprintDefinition -Path $sprintPath)
 
 $generated = New-Object System.Collections.Generic.List[string]
 $generated.Add($beginMarker)
 $generated.Add('')
-$generated.AddRange($table)
-$generated.Add('')
-$generated.Add("共 $($dailies.Count) 個 Daily。此表由 ``.agents/skills/daily/scripts/Update-DailyIndex.ps1`` 自動產生，請勿手動編輯標記之間的內容。")
+
+if ($sprints.Count -eq 0) {
+    $generated.AddRange([string[]](New-DailyTable -Rows @($entries | ForEach-Object { $_.Row })))
+    $generated.Add('')
+}
+else {
+    # 第一個 Sprint 起始日之前的 Daily 仍要列出，設定調整時才不會讓資料從目錄消失
+    $orphans = @($entries | Where-Object { $_.Number -lt $sprints[0].StartDay })
+    if ($orphans.Count -gt 0) {
+        $generated.Add('## 未分類 Daily')
+        $generated.Add('')
+        $generated.Add('**Daily：** 第一個 Sprint 起始日之前')
+        $generated.Add('')
+        $generated.AddRange([string[]](New-DailyTable -Rows @($orphans | ForEach-Object { $_.Row })))
+        $generated.Add('')
+    }
+
+    for ($i = 0; $i -lt $sprints.Count; $i++) {
+        $sprint = $sprints[$i]
+
+        # Sprint 的結束日由「下一個 Sprint 的起始日」推得；最後一個 Sprint 永遠開放，題數調整不必改腳本
+        $nextStart = if ($i + 1 -lt $sprints.Count) { $sprints[$i + 1].StartDay } else { $null }
+
+        $members = @($entries | Where-Object {
+            $_.Number -ge $sprint.StartDay -and ($null -eq $nextStart -or $_.Number -lt $nextStart)
+        })
+
+        $range = if ($null -ne $nextStart) {
+            'Day {0:D2}～Day {1:D2}' -f $sprint.StartDay, ($nextStart - 1)
+        }
+        else {
+            'Day {0:D2} 起' -f $sprint.StartDay
+        }
+
+        $generated.Add("## $($sprint.Name)")
+        $generated.Add('')
+        if ($null -ne $sprint.Status) {
+            $statusText = if ($null -ne $sprint.CompletedOn) {
+                "$($sprint.Status)（$($sprint.CompletedOn)）"
+            }
+            else {
+                $sprint.Status
+            }
+            # 行尾兩個空白＝Markdown 換行，讓狀態與 Daily 範圍併成一段
+            $generated.Add("**狀態：** $statusText  ")
+        }
+        $generated.Add("**Daily：** $range")
+        $generated.Add('')
+
+        if ($null -ne $sprint.Summary) {
+            $generated.Add("> $($sprint.Summary)")
+            $generated.Add('')
+        }
+
+        if ($null -ne $sprint.Note) {
+            $generated.Add("_$($sprint.Note)_")
+            $generated.Add('')
+        }
+
+        if ($members.Count -gt 0) {
+            $generated.AddRange([string[]](New-DailyTable -Rows @($members | ForEach-Object { $_.Row })))
+        }
+        else {
+            $generated.Add('目前尚未開始。')
+        }
+
+        $generated.Add('')
+    }
+}
+
+$footer = "共 $($dailies.Count) 個 Daily。此區塊由 ``.agents/skills/daily/scripts/Update-DailyIndex.ps1`` 自動產生，請勿手動編輯標記之間的內容。"
+if ($sprints.Count -gt 0) {
+    $footer += "Sprint 標題、狀態與說明請改 ``$SprintFile``。"
+}
+
+$generated.Add($footer)
 $generated.Add('')
 $generated.Add($endMarker)
 
@@ -259,4 +430,8 @@ else {
 Write-Host "Daily index updated: $indexPath ($($dailies.Count) dailies)"
 if ($pending.Count -gt 0) {
     Write-Host "Topic still missing for: $($pending -join ', ')"
+}
+
+if ($sprints.Count -gt 0) {
+    Write-Host "Sprint sections rendered: $($sprints.Count) (from $sprintPath)"
 }

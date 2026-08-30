@@ -31,3 +31,11 @@ $repoRoot = (git rev-parse --show-toplevel).Trim()
 ```
 
 The script rewrites only the content between the `DAILY-INDEX:BEGIN` / `DAILY-INDEX:END` markers. Never hand-edit that region. A Daily's topic is resolved in this order: a `講義_<主題>.md` file name, a `Daily NN — <主題>` header comment in `Program.cs`, then the first Markdown heading in any note. If all three are absent the row shows `（待補）`, which is a signal to name the note file — not to edit `INDEX.md`.
+
+## Sprint 分區
+
+`INDEX.md` 依 Sprint 分區顯示。Sprint 標題、狀態、起始 Daily 與重點說明全部維護在 `.agents/skills/daily/config/sprints.json`，腳本每次重跑都會依這份設定重建區塊，不會被覆蓋或消失。
+
+每筆 Sprint 的欄位：`name`、`startDay` 為必填，`status`、`completedOn`、`summary`、`note` 為選填。Sprint 的結束日由「下一個 Sprint 的 `startDay`」推得，最後一個 Sprint 永遠開放，所以實際題數增減不需要改設定或腳本。新增下一個 Sprint 時，只要在這個檔案追加一筆並填上它的 `startDay`。
+
+尚無 Daily 的 Sprint 仍會顯示標題、狀態與重點，表格位置改印「目前尚未開始。」。設定檔不存在時，腳本會退回原本的單一表格。

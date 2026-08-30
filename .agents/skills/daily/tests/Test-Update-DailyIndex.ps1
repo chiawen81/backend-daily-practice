@@ -131,6 +131,72 @@ try {
     & $scriptPath -RepositoryRoot $repositoryPath | Out-Null
     Assert-True -Condition ([IO.File]::ReadAllText($indexPath) -ceq $rerun) -Message 'rerun is idempotent'
 
+    # Sprint 分區：有設定檔時依 startDay 切段，最後一個 Sprint 不設結束日
+    $sprintDir = Join-Path $repositoryPath '.agents\skills\daily\config'
+    [void][IO.Directory]::CreateDirectory($sprintDir)
+    $sprintFile = Join-Path $sprintDir 'sprints.json'
+    $sprintJson = @'
+[
+  { "name": "Sprint A", "status": "Completed", "startDay": 1, "completedOn": "2026-01-01", "summary": "A 的重點", "note": "A 的補充" },
+  { "name": "Sprint B", "status": "Planned", "startDay": 3 },
+  { "name": "Sprint C", "status": "Planned", "startDay": 99, "summary": "C 的重點" }
+]
+'@
+    [IO.File]::WriteAllText($sprintFile, $sprintJson, [Text.UTF8Encoding]::new($false))
+
+    & $scriptPath -RepositoryRoot $repositoryPath | Out-Null
+    $sprinted = [IO.File]::ReadAllText($indexPath)
+
+    Assert-True -Condition ($sprinted.Contains('## Sprint A')) `
+        -Message 'sprint headings are rendered'
+    Assert-True -Condition ($sprinted.Contains('**狀態：** Completed（2026-01-01）')) `
+        -Message 'a completed sprint shows its status and completion date'
+    Assert-True -Condition ($sprinted.Contains('**Daily：** Day 01～Day 02')) `
+        -Message 'a bounded sprint ends one day before the next sprint starts'
+    Assert-True -Condition ($sprinted.Contains('> A 的重點')) `
+        -Message 'the sprint summary is rendered as a blockquote'
+    Assert-True -Condition ($sprinted.Contains('_A 的補充_')) `
+        -Message 'the optional sprint note is rendered'
+    Assert-True -Condition ($sprinted.Contains('**Daily：** Day 99 起')) `
+        -Message 'the last sprint stays open ended instead of hard-coding an end day'
+    Assert-True -Condition ($sprinted.Contains('目前尚未開始。')) `
+        -Message 'a sprint without any Daily says so instead of showing an empty table'
+    Assert-True -Condition ((([regex]::Matches($sprinted, '\| Day \| 完成日 \|')).Count) -eq 2) `
+        -Message 'only sprints that own dailies get a table'
+
+    foreach ($day in @('01', '02', '03', '04')) {
+        Assert-True -Condition ($sprinted -match "\| \[$day\]\(day$day/\)") `
+            -Message "day$day survives the sprint grouping"
+    }
+
+    & $scriptPath -RepositoryRoot $repositoryPath | Out-Null
+    $sprintRerun = [IO.File]::ReadAllText($indexPath)
+    Assert-True -Condition ($sprintRerun -ceq $sprinted) -Message 'the sprint layout is idempotent'
+    Assert-True -Condition ((([regex]::Matches($sprintRerun, '## Sprint A')).Count) -eq 1) `
+        -Message 'rerun does not duplicate sprint sections'
+
+    # 第一個 Sprint 起始日之前的 Daily 不能從目錄消失
+    [IO.File]::WriteAllText($sprintFile, '[{ "name": "Sprint Z", "startDay": 3 }]', [Text.UTF8Encoding]::new($false))
+    & $scriptPath -RepositoryRoot $repositoryPath | Out-Null
+    $orphaned = [IO.File]::ReadAllText($indexPath)
+    Assert-True -Condition ($orphaned.Contains('## 未分類 Daily')) `
+        -Message 'dailies before the first sprint are listed separately'
+    Assert-True -Condition ($orphaned -match '\| \[01\]\(day01/\)') `
+        -Message 'a Daily outside every sprint is still listed'
+
+    # 壞掉的 Sprint 設定必須明確失敗
+    [IO.File]::WriteAllText($sprintFile, 'not json at all', [Text.UTF8Encoding]::new($false))
+    $threw = $false
+    try {
+        & $scriptPath -RepositoryRoot $repositoryPath | Out-Null
+    }
+    catch {
+        $threw = $true
+    }
+    Assert-True -Condition $threw -Message 'invalid sprint metadata is rejected'
+
+    Remove-Item -LiteralPath $sprintFile -Force
+
     # 標記毀損時必須明確失敗，而不是靜默覆蓋
     [IO.File]::WriteAllText($indexPath, 'no markers here', [Text.UTF8Encoding]::new($false))
     $threw = $false

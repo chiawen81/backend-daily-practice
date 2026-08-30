@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Sprint 1 — Initial Baseline & LINQ Foundations",
+    "status": "Completed",
+    "startDay": 1,
+    "completedOn": "2026-08-30",
+    "summary": "建立 C# 基本語法、Collection 與 LINQ baseline，從 `List<T>`、Lambda，逐步練習 `Where`、`Any`、`Contains`、`Select`、`FirstOrDefault` 與 `null` 判斷，最後完成 LINQ 綜合 Retrieval。"
+  },
+  {
+    "name": "Sprint 2 — C# Program Structure & Data Handling",
+    "status": "Planned",
+    "startDay": 13,
+    "note": "目前預計 12 個 Daily，實際題數仍可能依學習狀況微調。",
+    "summary": "從「能在 `Program.cs` 寫出 LINQ」前進到能使用 class、object、property 與 method 組織程式，並補強 null handling、Guard Clause、Dictionary、Lookup、Pattern Retrieval 與 AI Code Review。"
+  }
+]

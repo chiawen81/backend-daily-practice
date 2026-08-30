@@ -45,6 +45,8 @@
 > ```
 >
 > 表格由腳本產生，請勿手動編輯 `DAILY-INDEX` 標記之間的內容（標記外可自由加註）。
+>
+> 目錄依 Sprint 分區呈現。Sprint 標題、狀態、起始 Daily 與重點說明維護在 `.agents/skills/daily/config/sprints.json`；新增 Sprint 時在該檔案追加一筆即可，不需要改腳本。
 
 ```text
          取得題目、建環境
