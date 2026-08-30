@@ -94,7 +94,7 @@ if(targetProduct is null)
 
 if(targetProduct is not null)
 {
-    Console.WriteLine($"商品名稱:{targetProduct?.Name}");
+    Console.WriteLine($"商品名稱:{targetProduct.Name}");
 
 }
 
