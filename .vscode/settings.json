@@ -24,4 +24,11 @@
 
   // 依 editor.wordWrapColumn 的欄寬進行自動換
   "editor.wordWrap": "wordWrapColumn",
+
+  // ==================== C# 存檔自動排版 ====================
+  // ※ 依 .editorconfig 規則，儲存 .cs 檔時自動排版（例如 Id=1001 → Id = 1001）※
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.formatOnSave": true
+  }
 }

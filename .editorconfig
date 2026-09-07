@@ -1,0 +1,43 @@
+# EditorConfig 是跨編輯器/跨語言的通用規格（editorconfig.org），VS Code、Visual Studio、Rider 等都原生支援。
+# 這個檔案存在，代表以下規則不再是「這個資料夾以下都適用」，而是要往上找到 root = true 才停止。
+root = true
+
+# [*] 區塊對所有副檔名生效，屬於 EditorConfig 最基本、跨語言都懂的通用屬性。
+[*]
+indent_style = space          # 縮排用空白字元，而不是 tab
+indent_size = 4                # 每一層縮排 4 個空白
+charset = utf-8                 # 檔案編碼統一用 UTF-8
+trim_trailing_whitespace = true # 存檔時砍掉每一行結尾多餘的空白
+insert_final_newline = true     # 檔案結尾自動補一個換行符號
+
+# [*.cs] 以下只對 .cs 檔生效，且都是 csharp_ / dotnet_ 開頭的屬性，
+# 這些是 .NET/Roslyn 專屬的擴充規則，只有 dotnet format、Visual Studio、
+# Rider、VS Code 的 C# 擴充套件（背後也是 Roslyn）看得懂並會套用，
+# 其他語言的工具（例如 Prettier）不會讀也不會理它們。
+
+# 二元運算子（=、+、-、*、/、>=... 等）前後要留空白，例如 Id=1001 → Id = 1001
+csharp_space_around_binary_operators = before_and_after
+
+# 逗號「後面」要留空白，例如 order1001,order1002 → order1001, order1002
+csharp_space_after_comma = true
+
+# 逗號「前面」不留空白，例如避免變成 order1001 ,order1002
+csharp_space_before_comma = false
+
+# if / for / while / foreach 等關鍵字後面要留空白，例如 if(x) → if (x)
+csharp_space_after_keywords_in_control_flow_statements = true
+
+# 大括號一律換到新的一行（Allman 風格），例如：
+# if (x)
+# {
+#     ...
+# }
+csharp_new_line_before_open_brace = all
+
+# using 陳述式中，System 開頭的命名空間要排在最前面
+dotnet_sort_system_directives_first = true
+
+# Markdown 檔案：保留每一行結尾的空白（Markdown 語法用「行尾兩個空白」代表強制換行，
+# 若被 trim_trailing_whitespace 砍掉，換行效果就會消失）
+[*.md]
+trim_trailing_whitespace = false
