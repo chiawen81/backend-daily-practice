@@ -39,7 +39,8 @@ _目前預計 12 個 Daily，實際題數仍可能依學習狀況微調。_
 |:---:|:------:|------|:------:|------|
 | [13](day13/) | 2026-08-31 | Day13 — class / object / property 心智模型 | [Program.cs](day13/Program.cs) | [doc](day13/doc.md) |
 | [14](day14/) | 2026-09-02 | C#-Object Initializer | [Program.cs](day14/Program.cs) | [講義](day14/講義_C#-Object%20Initializer.md) |
+| [15](day15/) | 2026-09-04 | C#-method | [Program.cs](day15/Program.cs) | [講義](day15/講義_C#-method.md) |
 
-共 14 個 Daily。此區塊由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。Sprint 標題、狀態與說明請改 `.agents/skills/daily/config/sprints.json`。
+共 15 個 Daily。此區塊由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。Sprint 標題、狀態與說明請改 `.agents/skills/daily/config/sprints.json`。
 
 <!-- DAILY-INDEX:END -->
