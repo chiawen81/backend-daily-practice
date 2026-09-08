@@ -5,23 +5,26 @@ Console.WriteLine("Hello, Day17!");
 // —————————————————————————————— 變數 ——————————————————————————————
 var orders = new List<Order>()
 {
-    new Order(){
+    new Order()
+    {
         Id = 1001,
-        CustomerName= "Alice",
-        Price=2500,
-        IsPaid=true
+        CustomerName = "Alice",
+        Price = 2500,
+        IsPaid = true
     },
-    new Order(){
-                Id = 1002,
-        CustomerName= "Bob",
-        Price=1200,
-        IsPaid=false
+    new Order()
+    {
+        Id = 1002,
+        CustomerName = "Bob",
+        Price = 1200,
+        IsPaid = false
     },
-   new Order(){
-                Id = 1003,
-        CustomerName= "Carol",
-        Price=3000,
-        IsPaid=false
+    new Order()
+    {
+        Id = 1003,
+        CustomerName = "Carol",
+        Price = 3000,
+        IsPaid = false
     }
 };
 
