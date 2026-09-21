@@ -30,36 +30,34 @@ void PrintOrderCheck(
     IEnumerable<Product> products,
     HashSet<int> requestedProductIds)
 {
-    var productIds = products.Select(item => item.Id);
-    var isNotExistButRequiredIds = requestedProductIds.Except(productIds);
+    // 1. 找出有被要求購買的商品
+    var requestedProducts = products
+        .Where(product => requestedProductIds.Contains(product.Id));
 
-    foreach (var item in products)
+    foreach (var product in requestedProducts)
     {
-
-        var isExistAndRequired = requestedProductIds.Contains(item.Id);
-
-        if (isExistAndRequired)
-        {
-            Console.WriteLine($"{item.Name}");
-        }
+        Console.WriteLine(product.Name);
     }
 
-    if (!isNotExistButRequiredIds.Any())
+    // 2. 找出有被要求、但系統不存在的 ProductId
+    var existingProductIds = products
+        .Select(product => product.Id);
+
+    var missingProductIds = requestedProductIds
+        .Except(existingProductIds);
+
+    // 3. 處理不存在的商品
+    if (!missingProductIds.Any())
     {
-        Console.WriteLine($"All requested products exist");
+        Console.WriteLine("All requested products exist");
+        return;
     }
-    else
+
+    foreach (var productId in missingProductIds)
     {
-
-        foreach (var id in isNotExistButRequiredIds)
-        {
-            Console.WriteLine($"Product {id} not found");
-        }
+        Console.WriteLine($"Product {productId} not found");
     }
-
-
 }
-
 
 
 
