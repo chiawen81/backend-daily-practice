@@ -48,7 +48,8 @@ _目前預計 12 個 Daily，實際題數仍可能依學習狀況微調。_
 | [21](day21/) | 2026-09-15 | C#-Day21-HashSet+Intersect | [Program.cs](day21/Program.cs) | [講義](day21/講義_C#-Day21-HashSet+Intersect.md) |
 | [22](day22/) | 2026-09-16 | C#-Day22-HashSet+Except | [Program.cs](day22/Program.cs) | [講義](day22/講義_C#-Day22-HashSet+Except.md) |
 | [23](day23/) | 2026-09-17 | C#-Day23-HashSet 常見組合1 | [Program.cs](day23/Program.cs) | [講義](day23/講義_C#-Day23-HashSet%20常見組合1.md) |
+| [24](day24/) | 2026-09-18 | C#-Day24-Guard Clause+null Retrieval | [Program.cs](day24/Program.cs) | [講義](day24/講義_C#-Day24-Guard%20Clause+null%20Retrieval.md) |
 
-共 23 個 Daily。此區塊由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。Sprint 標題、狀態與說明請改 `.agents/skills/daily/config/sprints.json`。
+共 24 個 Daily。此區塊由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。Sprint 標題、狀態與說明請改 `.agents/skills/daily/config/sprints.json`。
 
 <!-- DAILY-INDEX:END -->
