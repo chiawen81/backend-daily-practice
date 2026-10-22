@@ -54,7 +54,8 @@ _目前預計 12 個 Daily，實際題數仍可能依學習狀況微調。_
 | [27](day27/) | 2026-10-06 | C#-TryGetValue | [Program.cs](day27/Program.cs) | [講義](day27/講義_C#-TryGetValue.md) |
 | [28](day28/) | 2026-10-06 | C#-Dictionary Lookup | [Program.cs](day28/Program.cs) | [講義](day28/講義_C#-Dictionary%20Lookup.md) |
 | [29](day29/) | 2026-10-14 | C#-Dictionary foreach | [Program.cs](day29/Program.cs) | [講義](day29/講義_C#-Dictionary%20foreach.md) |
+| [30](day30/) | 2026-10-21 | C#-List → Dictionary | [Program.cs](day30/Program.cs) | [講義](day30/講義_C#-List%20→%20Dictionary.md) |
 
-共 29 個 Daily。此區塊由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。Sprint 標題、狀態與說明請改 `.agents/skills/daily/config/sprints.json`。
+共 30 個 Daily。此區塊由 `.agents/skills/daily/scripts/Update-DailyIndex.ps1` 自動產生，請勿手動編輯標記之間的內容。Sprint 標題、狀態與說明請改 `.agents/skills/daily/config/sprints.json`。
 
 <!-- DAILY-INDEX:END -->
